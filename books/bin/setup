@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+require 'pathname'
+
+# path to your application root.
+APP_ROOT = Pathname.new File.expand_path('../../',  __FILE__)
+
+Dir.chdir APP_ROOT do
+  puts '== Installing dependencies =='
+  system 'gem install bundler --conservative'
+  system 'bundle check || bundle install'
+
+  puts '\n== Copying sample files =='
+  unless File.exist?('config/database.yml')
+    system 'cp config/database.yml.sample config/database.yml'
+  end
+end
