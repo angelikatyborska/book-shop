@@ -2,7 +2,7 @@
 require 'pathname'
 
 # path to your application root.
-APP_ROOT = Pathname.new File.expand_path('../../',  __FILE__)
+APP_ROOT = Pathname.new File.expand_path('../../', __FILE__)
 
 Dir.chdir APP_ROOT do
   puts '== Installing dependencies =='
@@ -13,4 +13,7 @@ Dir.chdir APP_ROOT do
   unless File.exist?('config/database.yml')
     system 'cp config/database.yml.sample config/database.yml'
   end
+
+  puts '\n== Preparing database =='
+  system 'bin/rake db:create'
 end

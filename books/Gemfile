@@ -1,6 +1,8 @@
 source 'https://rubygems.org'
 
-gem 'activemodel', '~> 5.1'
-gem 'activerecord', '~> 5.1'
+ruby '2.4.1'
+
+gem 'activemodel', '~> 5.1', require: 'active_model'
+gem 'activerecord', '~> 5.1', require: 'active_record'
 gem 'amqp', '~> 1.7'
 gem 'pg', '~> 0.21'
