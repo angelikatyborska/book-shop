@@ -49,8 +49,6 @@ namespace :db do
     puts 'Database dropped.'
   end
 
-  # TODO: do seeding
-
   desc 'Migrate the database (options: VERSION=x, VERBOSE=false).'
   task migrate: :configure_connection do
     ActiveRecord::Migration.verbose = true
@@ -63,8 +61,14 @@ namespace :db do
     ActiveRecord::Migrator.rollback MIGRATIONS_DIR, step
   end
 
-  # desc 'Retrieves the current schema version number'
-  # task version: :configure_connection do
-  #   puts "Current version: #{ActiveRecord::Migrator.current_version}"
-  # end
+  desc 'Retrieves the current schema version number'
+  task version: :configure_connection do
+    puts "Current version: #{ActiveRecord::Migrator.current_version}"
+  end
+
+  desc 'Seed the database'
+  task seed: :configure_connection do
+    require_relative 'config/application'
+    require_relative 'db/seeds'
+  end
 end
