@@ -5,4 +5,4 @@ Author.delete_all
 puts 'Creating authors...'
 
 Author.create(name: 'Jan Brzechwa')
-Author.create(name: 'Bertholt Brecht')
+Author.create(name: 'Bertolt Brecht')
