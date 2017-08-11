@@ -18,7 +18,7 @@ A Ruby service listing books (AMQP, PostgreSQL).
 
 An Elixir service providing reviews, including reviews of books (AMQP, MongoDB)
 
-3. HTTP Server
+3. Rpc Proxy
 
-A Ruby On Rails API that reroutes external HTTP request to internal RabbitMQ requests.
+A Ruby On Rails HTTP Server that translates external HTTP request to internal RabbitMQ RPCs.
 
