@@ -1,0 +1,16 @@
+default: &default
+  host: 'localhost'
+  user: 'guest'
+  password: 'guest'
+  port: 5672
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default
+  user: <%= ENV['RABBITMQ_USER'] %>
+  password: <%= ENV['RABBITMQ_PASSWORD'] %>
