@@ -3,36 +3,8 @@
 require_relative '../config/environment'
 rabbitmq_config = YAML.load_file('config/database.yml')[APP_ENV]
 
-class RPC # FIXME: this probably goes to /lib, or possibly into a gem and could be shared
-  def initialize(rabbitmq_config)
-    @connection = Bunny.new(rabbitmq_config)
-    @connection.start
-
-    @channel = @connection.create_channel
-
-    @queues = {}
-  end
-
-  def register_queue(routing_key, &block)
-    @queues[routing_key] = @channel.queue(routing_key)
-    @queues[routing_key].subscribe do |delivery_info, properties, payload|
-      reponse = block.call
-      puts "responding with #{reponse}"
-      @channel.default_exchange.publish(
-        reponse,
-        routing_key: properties[:reply_to],
-        correlation_id: properties[:correlation_id],
-      )
-    end
-  end
-
-  def close
-    @channel.close
-  end
-end
-
 begin
-  rpc = RPC.new(rabbitmq_config)
+  rpc = RpcProvider.new(rabbitmq_config)
   rpc.register_queue('book-shop.books.authors.list') do
     Author.all.map(&:name).to_s
   end
