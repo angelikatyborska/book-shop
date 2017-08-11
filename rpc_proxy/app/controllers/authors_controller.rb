@@ -1,8 +1,6 @@
 class AuthorsController < ApplicationController
   def index
-    response = ::RpcClient.get('book-shop.books.authors.list')
-    puts 'got response'
-    puts response
+    response = ::Rpc.get('book-shop.books.authors.list')
     render json: response
   end
 end

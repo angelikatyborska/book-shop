@@ -1,17 +1,17 @@
 require 'uuid'
 require 'thread'
+require 'logger'
 
-class RPC # FIXME: this probably goes to /lib, or possibly into a gem and could be shared
+class RpcClient
   attr_reader :lock, :condition
   attr_accessor :response, :correlation_id
 
-  def initialize
-    config = Rails.application.config_for(:rabbitmq)
-
+  def initialize(rabbitmq_config)
+    @logger = Logger.new(STDOUT)
     @lock = Mutex.new
     @condition = ConditionVariable.new
 
-    @connection = Bunny.new(config)
+    @connection = Bunny.new(rabbitmq_config)
     @connection.start
 
     @channel = @connection.create_channel
@@ -37,12 +37,12 @@ class RPC # FIXME: this probably goes to /lib, or possibly into a gem and could 
       reply_to: @reply_queue.name
     )
 
+    @logger.info("Waiting for RPC #{routing_key} (#{@correlation_id})")
+
     @lock.synchronize { @condition.wait(@lock) }
+
+    @logger.info("Received response for RPC #{routing_key} (#{@correlation_id}): #{@response}")
+
     @response
   end
 end
-
-rpc = RPC.new
-
-::RpcClient = rpc # FIXME: figure out proper names
-# FIXME: is there a better way to share this with the controllers?
