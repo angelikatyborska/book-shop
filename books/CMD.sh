@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-bundle exec bin/start
+exec bundle exec bin/start
