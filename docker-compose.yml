@@ -24,7 +24,7 @@ services:
       - POSTGRES_PASSWORD=postgres123
       - POSTGRES_DB=postgres # if not specified, POSTGRES_USER is used - not desired, rake task relies on the existence of the 'postgres' database
   books:
-    build: ./books # FIXME: I experience issues with the lack of logs from this service in docker-compose
+    build: ./books
     links:
       - postgres
       - rabbitmq

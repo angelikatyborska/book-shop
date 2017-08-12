@@ -2,6 +2,7 @@ require 'logger'
 
 class RpcProvider
   def initialize(rabbitmq_config)
+    STDOUT.sync = true
     @logger = Logger.new(STDOUT)
     @connection = Bunny.new(rabbitmq_config.symbolize_keys)
 
