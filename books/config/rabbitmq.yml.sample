@@ -12,5 +12,6 @@ test:
 
 production:
   <<: *default
+  host: rabbitmq
   user: <%= ENV['RABBITMQ_USER'] %>
   password: <%= ENV['RABBITMQ_PASSWORD'] %>

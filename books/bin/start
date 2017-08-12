@@ -1,7 +1,9 @@
 #!/usr/bin/env ruby
 
 require_relative '../config/environment'
-rabbitmq_config = YAML.load_file('config/database.yml')[APP_ENV]
+template = ERB.new File.read('config/rabbitmq.yml')
+rabbitmq_config = YAML.load(template.result)[APP_ENV]
+# FIXME: the above way of reading configs should be extracted to a single place
 
 begin
   rpc = RpcProvider.new(rabbitmq_config)

@@ -2,20 +2,20 @@ require 'logger'
 
 class RpcProvider
   def initialize(rabbitmq_config)
-    @connection = Bunny.new(rabbitmq_config)
-    @connection.start
+    @logger = Logger.new(STDOUT)
+    @connection = Bunny.new(rabbitmq_config.symbolize_keys)
+
+    try_connect
 
     @channel = @connection.create_channel
-
     @queues = {}
-    @logger = Logger.new(STDOUT)
   end
 
   def register_queue(routing_key, &block)
     @queues[routing_key] = @channel.queue(routing_key)
     @queues[routing_key].subscribe do |delivery_info, properties, payload|
-      reponse = block.call
       @logger.info("Received request for #{routing_key}")
+      reponse = block.call
       @logger.info("Responding to #{properties[:reply_to]} with #{reponse}")
       @channel.default_exchange.publish(
         reponse,
@@ -29,5 +29,18 @@ class RpcProvider
 
   def close
     @channel.close
+  end
+
+  private
+
+  def try_connect
+    @connection_retry ||= 0
+    @connection.start
+    @logger.info('Connected to RabbitMQ')
+  rescue Bunny::TCPConnectionFailedForAllHosts => e
+    @logger.warn("Connection attempt to RabbitMQ no #{@connection_retry} failed")
+    @connection_retry += 1
+    sleep 2 ** @connection_retry
+    try_connect
   end
 end

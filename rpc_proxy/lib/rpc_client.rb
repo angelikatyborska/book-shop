@@ -7,17 +7,18 @@ class RpcClient
   attr_accessor :response, :correlation_id
 
   def initialize(rabbitmq_config)
-    @logger = Logger.new(STDOUT)
     @lock = Mutex.new
     @condition = ConditionVariable.new
 
-    @connection = Bunny.new(rabbitmq_config)
-    @connection.start
+    @logger = Logger.new(STDOUT)
+    @connection = Bunny.new(rabbitmq_config.symbolize_keys)
+
+    try_connect
 
     @channel = @connection.create_channel
     @reply_queue = @channel.queue(UUID.generate, exclusive: true, auto_delete: true)
 
-    that = self # ?
+    that = self
 
     @reply_queue.subscribe do |delivery_info, properties, payload|
       if that.correlation_id == properties[:correlation_id]
@@ -44,5 +45,18 @@ class RpcClient
     @logger.info("Received response for RPC #{routing_key} (#{@correlation_id}): #{@response}")
 
     @response
+  end
+
+  private
+
+  def try_connect
+    @connection_retry ||= 0
+    @connection.start
+    @logger.info('Connected to RabbitMQ')
+  rescue Bunny::TCPConnectionFailedForAllHosts => e
+    @logger.warn("Connection attempt to RabbitMQ no #{@connection_retry} failed")
+    @connection_retry += 1
+    sleep 2 ** @connection_retry
+    try_connect
   end
 end

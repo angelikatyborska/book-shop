@@ -1,0 +1,52 @@
+version: '3'
+
+volumes:
+  postgres_data:
+    external: true
+
+# I do not care that all of the "secrets" are public here
+# This is just an example
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.6-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest123
+      - RABBITMQ_DEFAULT_PASS=guest123
+    ports:
+      - 4000:15672
+  postgres:
+    image: postgres:9.6
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres123
+      - POSTGRES_PASSWORD=postgres123
+      - POSTGRES_DB=postgres # if not specified, POSTGRES_USER is used - not desired, rake task relies on the existence of the 'postgres' database
+  books:
+    build: ./books # FIXME: I experience issues with the lack of logs from this service in docker-compose
+    links:
+      - postgres
+      - rabbitmq
+    depends_on:
+      - postgres
+      - rabbitmq
+    environment:
+      - APP_ENV=production
+      - RABBITMQ_USER=guest123
+      - RABBITMQ_PASSWORD=guest123
+      - POSTGRES_USER=postgres123
+      - POSTGRES_PASSWORD=postgres123
+  rpc_proxy:
+    build: ./rpc_proxy
+    links:
+      - rabbitmq
+    depends_on:
+      - rabbitmq
+    ports:
+      - 3000:3000
+    environment:
+      - RAILS_ENV=production
+      - RABBITMQ_USER=guest123
+      - RABBITMQ_PASSWORD=guest123
+      - SECRET_KEY_BASE=bbe477349612e8c2c6c72e3f5211069ce057baae2c95d87a856700898eee52fba2ab5253c8b9e186e4cc1e716a24405580ac91272ca64aa4a00d36e355468749

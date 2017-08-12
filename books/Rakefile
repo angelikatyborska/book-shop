@@ -1,4 +1,5 @@
 require 'yaml'
+require 'erb'
 require 'logger'
 require 'active_record'
 
@@ -23,7 +24,8 @@ namespace :db do
   task configuration: :environment do
     admin_config = {database: 'postgres', schema_search_path: 'public'}
 
-    @config = YAML.load_file('config/database.yml')[APP_ENV] # FIXME: this is a duplication from environment.rb
+    template = ERB.new File.read('config/database.yml')
+    @config = YAML.load(template.result)[APP_ENV] # FIXME: this is a duplication from environment.rb
     @admin_config = @config.merge(admin_config)
   end
 
