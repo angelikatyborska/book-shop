@@ -1,12 +1,12 @@
-require_relative './application'
+require_relative 'config/application'
 
-namespace :db do
+db_namespace = namespace :db do
   def create_database config
     options = {charset: 'utf8'}
 
     create_db = lambda do |config|
       ActiveRecord::Base.establish_connection config.merge(@admin_config)
-      ActiveRecord::Base.connection.create_database config['database'], options
+      ActiveRecord::Base.connection.create_database config[:database], options
       ActiveRecord::Base.establish_connection config
     end
 
@@ -42,7 +42,7 @@ namespace :db do
 
   desc 'Drops the database for the current APP_ENV'
   task drop: :configure_admin_connection do
-    ActiveRecord::Base.connection.drop_database @config['database']
+    ActiveRecord::Base.connection.drop_database @config[:database]
     puts 'Database dropped.'
   end
 
@@ -50,12 +50,14 @@ namespace :db do
   task migrate: :configure_connection do
     ActiveRecord::Migration.verbose = true
     ActiveRecord::Migrator.migrate MIGRATIONS_DIR, ENV['VERSION'] ? ENV['VERSION'].to_i : nil
+    db_namespace['schema:dump'].invoke
   end
 
   desc 'Rolls the schema back to the previous version (specify steps w/ STEP=n).'
   task rollback: :configure_connection do
     step = ENV['STEP'] ? ENV['STEP'].to_i : 1
     ActiveRecord::Migrator.rollback MIGRATIONS_DIR, step
+    db_namespace['schema:dump'].invoke
   end
 
   desc 'Retrieves the current schema version number'
@@ -67,5 +69,17 @@ namespace :db do
   task seed: :configure_connection do
     require_relative 'config/application'
     require_relative 'db/seeds'
+  end
+
+  namespace :schema do
+    task load: :configure_connection do
+      load('db/schema.rb')
+    end
+
+    task dump: :configure_connection do
+      File.open('db/schema.rb', 'w:utf-8') do |file|
+        ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, file)
+      end
+    end
   end
 end
