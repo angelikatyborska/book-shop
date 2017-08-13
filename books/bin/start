@@ -5,7 +5,7 @@ require_relative '../config/environment'
 begin
   rpc = RpcProvider.new(Books.rabbitmq_config)
   rpc.register_queue('book-shop.books.authors.list') do
-    Author.all.map(&:name).to_s
+    Author.all.to_json
   end
   puts 'Listening... (press Ctrl-C to stop)'
   loop { sleep 10 }

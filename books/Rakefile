@@ -46,7 +46,7 @@ db_namespace = namespace :db do
     puts 'Database dropped.'
   end
 
-  desc 'Migrate the database (options: VERSION=x, VERBOSE=false).'
+  desc 'Migrate the database (options: VERSION=x).'
   task migrate: :configure_connection do
     ActiveRecord::Migration.verbose = true
     ActiveRecord::Migrator.migrate MIGRATIONS_DIR, ENV['VERSION'] ? ENV['VERSION'].to_i : nil
