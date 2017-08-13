@@ -1,4 +1,5 @@
 require_relative 'config/application'
+require 'irb'
 
 db_namespace = namespace :db do
   def create_database config
@@ -83,3 +84,11 @@ db_namespace = namespace :db do
     end
   end
 end
+
+task :console do
+  require_relative 'config/environment'
+  db_namespace['db:configure_connection'].invoke
+  ARGV.clear
+  IRB.start
+end
+
