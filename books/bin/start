@@ -1,12 +1,9 @@
 #!/usr/bin/env ruby
 
 require_relative '../config/environment'
-template = ERB.new File.read('config/rabbitmq.yml')
-rabbitmq_config = YAML.load(template.result)[APP_ENV]
-# FIXME: the above way of reading configs should be extracted to a single place
 
 begin
-  rpc = RpcProvider.new(rabbitmq_config)
+  rpc = RpcProvider.new(Books.rabbitmq_config)
   rpc.register_queue('book-shop.books.authors.list') do
     Author.all.map(&:name).to_s
   end
@@ -14,5 +11,6 @@ begin
   loop { sleep 10 }
 rescue Interrupt => error
   rpc.close
+  ActiveRecord::Base.remove_connection
   raise error
 end

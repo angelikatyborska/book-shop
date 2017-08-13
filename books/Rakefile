@@ -1,7 +1,4 @@
-require 'yaml'
-require 'erb'
-require 'logger'
-require 'active_record'
+require_relative './application'
 
 namespace :db do
   def create_database config
@@ -17,15 +14,13 @@ namespace :db do
   end
 
   task :environment do
-    APP_ENV = ENV['APP_ENV'] || 'development' # FIXME: this is a duplication from environment.rb
     MIGRATIONS_DIR = ENV['MIGRATIONS_DIR'] || 'db/migrate'
   end
 
   task configuration: :environment do
     admin_config = {database: 'postgres', schema_search_path: 'public'}
 
-    template = ERB.new File.read('config/database.yml')
-    @config = YAML.load(template.result)[APP_ENV] # FIXME: this is a duplication from environment.rb
+    @config = Books.database_config
     @admin_config = @config.merge(admin_config)
   end
 

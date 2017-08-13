@@ -4,8 +4,10 @@
 require 'bundler'
 Bundler.require
 require 'logger'
-
+require 'yaml'
+require 'erb'
 require 'pathname'
+
 # path to your application root.
 APP_ROOT = Pathname.new File.expand_path('../../',  __FILE__)
 
