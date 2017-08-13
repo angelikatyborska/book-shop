@@ -4,9 +4,15 @@ require_relative '../config/environment'
 
 begin
   rpc = RpcProvider.new(Books.rabbitmq_config)
-  rpc.register_queue('book-shop.books.authors.list') do
-    Author.all.to_json
+  # FIXME: find a better place to declare those queues
+  rpc.register_queue('book-shop.books.authors.all') do
+    Author.includes(:books).all.to_json
   end
+
+  rpc.register_queue('book-shop.books.books.all') do
+    Book.all.to_json
+  end
+
   puts 'Listening... (press Ctrl-C to stop)'
   loop { sleep 10 }
 rescue Interrupt => error
