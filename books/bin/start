@@ -2,22 +2,27 @@
 
 require_relative '../config/environment'
 
-begin
-  rpc = RpcProvider.new(Books.rabbitmq_config)
-  # FIXME: find a better place to declare those queues
-  rpc.register_queue('book-shop.books.authors.all') do
-    Author.includes(:books).all.to_json
-  end
+all_migrations_up = system 'rake db:migrate:status > /dev/null'
+if all_migrations_up
+  begin
+    rpc = RpcProvider.new(Books.rabbitmq_config)
+    # FIXME: find a better place to declare those queues
+    rpc.register_queue('book-shop.books.authors.all') do
+      Author.includes(:books).all.to_json
+    end
 
-  rpc.register_queue('book-shop.books.books.all') do
-    Book.all.to_json
-  end
+    rpc.register_queue('book-shop.books.books.all') do
+      Book.all.to_json
+    end
 
-  puts 'Listening... (press Ctrl-C to stop)'
-  loop { sleep 10 }
-rescue Interrupt => error
-  puts 'Shutting down...'
-  rpc.close
-  ActiveRecord::Base.remove_connection
-  exit 0
+    puts 'Listening... (press Ctrl-C to stop)'
+    loop { sleep 10 }
+  rescue Interrupt => error
+    puts 'Shutting down...'
+    rpc.close
+    ActiveRecord::Base.remove_connection
+    exit 0
+  end
+else
+  raise 'There are pending ActiveRecord migrations. Run them and start the application again.'
 end

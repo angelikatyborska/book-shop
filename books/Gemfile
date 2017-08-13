@@ -7,3 +7,5 @@ gem 'activerecord', '~> 5.1', require: 'active_record'
 gem 'activesupport', '~> 5.1', require: 'active_support'
 gem 'bunny', '~> 2.7'
 gem 'pg', '~> 0.21'
+gem 'rake', require: false
+
