@@ -3,17 +3,15 @@ require 'thread'
 require 'logger'
 
 class RpcClient
-  attr_reader :lock, :condition
-  attr_accessor :response, :correlation_id
+  attr_reader :lock, :conditions, :responses
 
-  def initialize(rabbitmq_config)
+  def initialize(connection)
     @lock = Mutex.new
-    @condition = ConditionVariable.new
+    @conditions = {}
+    @responses = {}
 
     @logger = Logger.new(STDOUT)
-    @connection = Bunny.new(rabbitmq_config.symbolize_keys)
-
-    try_connect
+    @connection = connection
 
     @channel = @connection.create_channel
     @reply_queue = @channel.queue(UUID.generate, exclusive: true, auto_delete: true)
@@ -21,42 +19,34 @@ class RpcClient
     that = self
 
     @reply_queue.subscribe do |delivery_info, properties, payload|
-      if that.correlation_id == properties[:correlation_id]
-        that.response = payload
-        that.lock.synchronize { that.condition.signal }
+      if that.conditions[properties[:correlation_id]]
+        that.responses[properties[:correlation_id]] = payload
+        that.lock.synchronize { that.conditions.delete(properties[:correlation_id]).signal }
+      else
+        @logger.error("Discarding message #{payload.inspect} (correlation: #{properties[:correlation_id].inspect})")
       end
     end
   end
 
   def get(routing_key)
-    @correlation_id = UUID.generate
+    correlation_id = UUID.generate
 
     @channel.default_exchange.publish(
       '',
       routing_key: routing_key,
-      correlation_id: @correlation_id,
+      correlation_id: correlation_id,
       reply_to: @reply_queue.name
     )
 
-    @logger.info("Waiting for RPC #{routing_key} (#{@correlation_id})")
+    @conditions[correlation_id] = ConditionVariable.new
 
-    @lock.synchronize { @condition.wait(@lock) }
+    @logger.info("Waiting for RPC #{routing_key} (#{correlation_id})")
 
-    @logger.info("Received response for RPC #{routing_key} (#{@correlation_id}): #{@response}")
+    @lock.synchronize { @conditions[correlation_id].wait(@lock) }
 
-    @response
-  end
 
-  private
-
-  def try_connect
-    @connection_retry ||= 0
-    @connection.start
-    @logger.info('Connected to RabbitMQ')
-  rescue Bunny::TCPConnectionFailedForAllHosts => e
-    @logger.warn("Connection attempt to RabbitMQ no #{@connection_retry} failed")
-    @connection_retry += 1
-    sleep 2 ** @connection_retry
-    try_connect
+    response = @responses.delete(correlation_id)
+    @logger.info("Received response for RPC #{routing_key} (#{correlation_id}): #{response}")
+    response
   end
 end

@@ -16,12 +16,12 @@ class RpcProvider
     @queues[routing_key] = @channel.queue(routing_key)
     @queues[routing_key].subscribe do |delivery_info, properties, payload|
       @logger.info("Received request for #{routing_key}")
-      reponse = block.call
-      @logger.info("Responding to #{properties[:reply_to]} with #{reponse}")
+      response = block.call
+      @logger.info("Responding to #{properties[:reply_to]} with #{response}")
       @channel.default_exchange.publish(
-        reponse,
+        response,
         routing_key: properties[:reply_to],
-        correlation_id: properties[:correlation_id],
+        correlation_id: properties[:correlation_id]
       )
     end
 

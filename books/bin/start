@@ -2,7 +2,7 @@
 
 require_relative '../config/environment'
 
-all_migrations_up = system 'rake db:migrate:status > /dev/null'
+all_migrations_up = system 'rake db:migrate:status > /dev/null' # FIXME: move this functionality to the app code
 if all_migrations_up
   begin
     rpc = RpcProvider.new(Books.rabbitmq_config)

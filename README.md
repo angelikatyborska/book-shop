@@ -1,6 +1,6 @@
 # Book Shop
 
-Just a small "playground" project to practice my skills in various technologies. Nothing interesting to see here.
+Just a "playground" project to practice my skills in various technologies. Nothing interesting to see here.
 
 What I want to practice:
 - doing RPCs with RabbitMQ,
