@@ -31,14 +31,14 @@ class RpcClient
   def get(routing_key)
     correlation_id = UUID.generate
 
+    @conditions[correlation_id] = ConditionVariable.new
+
     @channel.default_exchange.publish(
       '',
       routing_key: routing_key,
       correlation_id: correlation_id,
       reply_to: @reply_queue.name
     )
-
-    @conditions[correlation_id] = ConditionVariable.new
 
     @logger.info("Waiting for RPC #{routing_key} (#{correlation_id})")
 
